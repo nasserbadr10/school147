@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة إقامات الطالبات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            font-size: 24px;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .login-error {
+            color: red;
+            font-size: 14px;
+        }
+        .login-footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .main-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification {
+            font-size: 18px;
+            color: #ff6347;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .delete-btn {
+            background-color: #b22222;
+            color: white;
+        }
+
+        .edit-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+
+        .semester-select {
+            margin-bottom: 10px;
+        }
+
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* تحسين التوافق مع الجوال والآيباد */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+            .main-container {
+                width: 100%;
+                margin: 10px;
+                padding: 15px;
+            }
+            table {
+                font-size: 14px;
+                width: 100%;
+                table-layout: auto; /* اجعل الجدول يتكيف مع الحجم */
+                overflow-x: auto; /* اجعل الجدول قابلًا للتمرير أفقيًا */
+                display: block;
+            }
+            th, td {
+                padding: 10px;
+                word-wrap: break-word; /* اجعل النص يتكسر عند الحاجة */
+            }
+            .semester-select, input[type="text"], input[type="password"], input[type="date"] {
+                width: 100%;
+                font-size: 14px;
+                padding: 10px;
+            }
+            .logout-btn {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+            button {
+                width: 100%;
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 10px;
+            }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px;
+            }
+            .semester-select, input[type="text"], input[type="password"], input[type="date"] {
+                padding: 8px;
+                font-size: 12px;
+            }
+            .logout-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            button {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginPage">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم" required>
+        <input type="password" id="password" placeholder="الرمز السري" required>
+        <button onclick="login()">دخول</button>
+        <p id="loginError" class="login-error"></p>
+        <div class="login-footer">
+            <p>المدرسة الابتدائية 147</p>
+            <p>أ/ فاطمة المطيري</p>
+        </div>
+    </div>
+
+    <div id="mainPage" class="main-container" style="display: none;">
+        <h1>إدارة إقامات الطالبات</h1>
+        <div id="notification" class="notification"></div>
+
+        <form onsubmit="addStudent(event)">
+            <input type="text" id="studentName" placeholder="اسم الطالبة" required>
+            <input type="date" id="expiryDate" required>
+            <select id="semester" class="semester-select">
+                <option value="1">الفصل الدراسي الأول</option>
+                <option value="2">الفصل الدراسي الثاني</option>
+            </select>
+            <button type="submit">إضافة</button>
+        </form>
+
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>اسم الطالبة</th>
+                    <th>تاريخ انتهاء الإقامة</th>
+                    <th>الفصل الدراسي</th>
+                    <th>حالة الإقامة</th>
+                    <th>التعديل</th>
+                    <th>الحذف</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        
+        <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+    </div>
+
+    <script>
+        const correctUsername = "omnasser";
+        const correctPassword = "1122";
+        const testUsername = "test";
+        const testPassword = "147";
+        let students = [];
+
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorMessage = document.getElementById("loginError");
+
+            if (username === correctUsername && password === correctPassword) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainPage").style.display = "block";
+                loadStudents();
+                showNotifications();
+            } else if (username === testUsername && password === testPassword) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainPage").style.display = "block";
+                loadStudents();
+                showNotifications();
+                disableEditing();
+            } else {
+                errorMessage.textContent = "اسم المستخدم أو الرمز السري غير صحيح.";
+            }
+        }
+
+        function disableEditing() {
+            const addButton = document.querySelector("button[type='submit']");
+            addButton.disabled = true;
+            const editButtons = document.querySelectorAll(".edit-btn");
+            editButtons.forEach(btn => btn.disabled = true);
+            const deleteButtons = document.querySelectorAll(".delete-btn");
+            deleteButtons.forEach(btn => btn.disabled = true);
+        }
+
+        function showNotifications() {
+            const expiredStudents = students.filter(student => isExpired(student.expiryDate));
+            const aboutToExpireStudents = students.filter(student => isAboutToExpire(student.expiryDate));
+            const notification = document.getElementById("notification");
+
+            notification.innerHTML = `
+                <p>الطلاب الذين انتهت إقامتهم: ${expiredStudents.length}</p>
+                <p>الطلاب الذين إقامتهم على وشك الانتهاء: ${aboutToExpireStudents.length}</p>
+            `;
+        }
+
+        function isExpired(expiryDate) {
+            const today = new Date();
+            const date = new Date(expiryDate);
+            return today > date;
+        }
+
+        function isAboutToExpire(expiryDate) {
+            const today = new Date();
+            const date = new Date(expiryDate);
+            const diffTime = date - today;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            return diffDays <= 30 && diffDays > 0;
+        }
+
+        function loadStudents() {
+            const storedStudents = JSON.parse(localStorage.getItem("students"));
+            if (storedStudents) {
+                students = storedStudents;
+            }
+            renderTable();
+        }
+
+        function addStudent(event) {
+            event.preventDefault();
+            const name = document.getElementById("studentName").value;
+            const expiryDate = document.getElementById("expiryDate").value;
+            const semester = document.getElementById("semester").value;
+
+            const newStudent = { name, expiryDate, semester };
+            students.push(newStudent);
+            localStorage.setItem("students", JSON.stringify(students));
+            renderTable();
+            showNotifications();
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = "";
+            students.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+
+            students.forEach((student, index) => {
+                const row = document.createElement("tr");
+                const status = isExpired(student.expiryDate)
+                    ? "منتهية"
+                    : isAboutToExpire(student.expiryDate)
+                    ? "على وشك الانتهاء"
+                    : "صالحة";
+
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.expiryDate}</td>
+                    <td>${student.semester === "1" ? "الفصل الدراسي الأول" : "الفصل الدراسي الثاني"}</td>
+                    <td>${status}</td>
+                    <td><button class="edit-btn" onclick="editStudent(${index})">تعديل</button></td>
+                    <td><button class="delete-btn" onclick="deleteStudent(${index})">حذف</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function editStudent(index) {
+            const student = students[index];
+            const newName = prompt("تعديل اسم الطالبة:", student.name);
+            const newExpiryDate = prompt("تعديل تاريخ انتهاء الإقامة:", student.expiryDate);
+            const newSemester = prompt("تعديل الفصل الدراسي:", student.semester);
+
+            students[index] = { name: newName, expiryDate: newExpiryDate, semester: newSemester };
+            localStorage.setItem("students", JSON.stringify(students));
+            renderTable();
+            showNotifications();
+        }
+
+        function deleteStudent(index) {
+            students.splice(index, 1);
+            localStorage.setItem("students", JSON.stringify(students));
+            renderTable();
+            showNotifications();
+        }
+
+        function logout() {
+            document.getElementById("loginPage").style.display = "block";
+            document.getElementById("mainPage").style.display = "none";
+        }
+    </script>
+</body>
+</html>
