@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة إقامات الطالبات</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             direction: rtl;
-            background-color: #f9f9f9;
+            background-color: #f3f0f8;
             text-align: center;
         }
         .login-container {
@@ -21,7 +22,7 @@
         }
         h2 {
             font-size: 24px;
-            color: #333;
+            color: #6a4c9c;
         }
         input[type="text"],
         input[type="password"] {
@@ -35,7 +36,7 @@
         button {
             padding: 10px;
             width: 100%;
-            background-color: #4CAF50;
+            background-color: #6a4c9c;
             color: white;
             border: none;
             border-radius: 5px;
@@ -43,18 +44,8 @@
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #5a3d89;
         }
-        .login-error {
-            color: red;
-            font-size: 14px;
-        }
-        .login-footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-
         .main-container {
             width: 90%;
             max-width: 1200px;
@@ -64,122 +55,67 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
-        .notification {
+        .notification, #stats {
             font-size: 18px;
-            color: #ff6347;
             font-weight: bold;
             margin-bottom: 20px;
         }
-
+        #stats span {
+            font-weight: bold;
+        }
+        span.expired {
+            color: #e74c3c;
+        }
+        span.near-expiry {
+            color: #f39c12;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
         }
-
         th, td {
             padding: 8px;
             text-align: center;
             border: 1px solid #ddd;
         }
-
         th {
             background-color: #f2f2f2;
         }
-
-        button {
-            padding: 8px 15px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
+        .expired {
+            background-color: #f8d7da;
         }
-
-        .delete-btn {
-            background-color: #b22222;
-            color: white;
+        .near-expiry {
+            background-color: #fff3cd;
         }
-
-        .edit-btn {
-            background-color: #008CBA;
-            color: white;
-        }
-
         .semester-select {
             margin-bottom: 10px;
         }
-
-        .logout-btn {
-            background-color: #f44336;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal button {
+            background-color: #6a4c9c;
             color: white;
             padding: 10px 20px;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-        }
-        .logout-btn:hover {
-            background-color: #d32f2f;
-        }
-
-        /* تحسين التوافق مع الجوال والآيباد */
-        @media (max-width: 768px) {
-            body {
-                font-size: 14px;
-            }
-            .main-container {
-                width: 100%;
-                margin: 10px;
-                padding: 15px;
-            }
-            table {
-                font-size: 14px;
-                width: 100%;
-                table-layout: auto; /* اجعل الجدول يتكيف مع الحجم */
-                overflow-x: auto; /* اجعل الجدول قابلًا للتمرير أفقيًا */
-                display: block;
-            }
-            th, td {
-                padding: 10px;
-                word-wrap: break-word; /* اجعل النص يتكسر عند الحاجة */
-            }
-            .semester-select, input[type="text"], input[type="password"], input[type="date"] {
-                width: 100%;
-                font-size: 14px;
-                padding: 10px;
-            }
-            .logout-btn {
-                font-size: 14px;
-                padding: 10px 15px;
-            }
-            button {
-                width: 100%;
-                font-size: 14px;
-                padding: 10px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .main-container {
-                padding: 10px;
-            }
-            table {
-                font-size: 12px;
-            }
-            th, td {
-                padding: 8px;
-            }
-            .semester-select, input[type="text"], input[type="password"], input[type="date"] {
-                padding: 8px;
-                font-size: 12px;
-            }
-            .logout-btn {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            button {
-                font-size: 12px;
-                padding: 8px;
-            }
         }
     </style>
 </head>
@@ -189,33 +125,33 @@
         <input type="text" id="username" placeholder="اسم المستخدم" required>
         <input type="password" id="password" placeholder="الرمز السري" required>
         <button onclick="login()">دخول</button>
-        <p id="loginError" class="login-error"></p>
-        <div class="login-footer">
-            <p>المدرسة الابتدائية 147</p>
-            <p>أ/ فاطمة المطيري</p>
-        </div>
+        <p id="loginError" style="color: red;"></p>
+        <p>المدرسة الابتدائية 147</p>
+        <p>أ/ فاطمة المطيري</p>
     </div>
 
     <div id="mainPage" class="main-container" style="display: none;">
         <h1>إدارة إقامات الطالبات</h1>
-        <div id="notification" class="notification"></div>
-
+        <div id="stats"></div>
         <form onsubmit="addStudent(event)">
             <input type="text" id="studentName" placeholder="اسم الطالبة" required>
             <input type="date" id="expiryDate" required>
             <select id="semester" class="semester-select">
-                <option value="1">الفصل الدراسي الأول</option>
-                <option value="2">الفصل الدراسي الثاني</option>
+                <option value="1">الصف الأول</option>
+                <option value="2">الصف الثاني</option>
+                <option value="3">الصف الثالث</option>
+                <option value="4">الصف الرابع</option>
+                <option value="5">الصف الخامس</option>
+                <option value="6">الصف السادس</option>
             </select>
             <button type="submit">إضافة</button>
         </form>
-
-        <table id="studentTable">
+        <table>
             <thead>
                 <tr>
                     <th>اسم الطالبة</th>
                     <th>تاريخ انتهاء الإقامة</th>
-                    <th>الفصل الدراسي</th>
+                    <th>الصف</th>
                     <th>حالة الإقامة</th>
                     <th>التعديل</th>
                     <th>الحذف</th>
@@ -223,78 +159,62 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
-        
-        <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+        <button onclick="logout()">تسجيل خروج</button>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>تنبيه: طالبات انتهت إقامتهن</h2>
+            <ul id="expiredStudentsList"></ul>
+            <button onclick="closeModal()">موافق</button>
+        </div>
     </div>
 
     <script>
-        const correctUsername = "omnasser";
+        const correctUsername = "ff";  // تم تعديل اسم المستخدم إلى ff
         const correctPassword = "1122";
-        const testUsername = "test";
-        const testPassword = "147";
-        let students = [];
+        let db;
+
+        function openDB() {
+            const request = indexedDB.open("studentsDB", 1);
+            request.onupgradeneeded = function(e) {
+                db = e.target.result;
+                if (!db.objectStoreNames.contains("students")) {
+                    db.createObjectStore("students", { keyPath: "id", autoIncrement: true });
+                }
+            };
+            request.onsuccess = function(e) {
+                db = e.target.result;
+                loadStudents();
+            };
+            request.onerror = function(e) {
+                console.error("Error opening database", e.target.error);
+            };
+        }
 
         function login() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
-            const errorMessage = document.getElementById("loginError");
 
             if (username === correctUsername && password === correctPassword) {
                 document.getElementById("loginPage").style.display = "none";
                 document.getElementById("mainPage").style.display = "block";
-                loadStudents();
-                showNotifications();
-            } else if (username === testUsername && password === testPassword) {
-                document.getElementById("loginPage").style.display = "none";
-                document.getElementById("mainPage").style.display = "block";
-                loadStudents();
-                showNotifications();
-                disableEditing();
+                checkExpiredStudents();
             } else {
-                errorMessage.textContent = "اسم المستخدم أو الرمز السري غير صحيح.";
+                document.getElementById("loginError").textContent = "اسم المستخدم أو الرمز السري غير صحيح.";
             }
-        }
-
-        function disableEditing() {
-            const addButton = document.querySelector("button[type='submit']");
-            addButton.disabled = true;
-            const editButtons = document.querySelectorAll(".edit-btn");
-            editButtons.forEach(btn => btn.disabled = true);
-            const deleteButtons = document.querySelectorAll(".delete-btn");
-            deleteButtons.forEach(btn => btn.disabled = true);
-        }
-
-        function showNotifications() {
-            const expiredStudents = students.filter(student => isExpired(student.expiryDate));
-            const aboutToExpireStudents = students.filter(student => isAboutToExpire(student.expiryDate));
-            const notification = document.getElementById("notification");
-
-            notification.innerHTML = `
-                <p>الطلاب الذين انتهت إقامتهم: ${expiredStudents.length}</p>
-                <p>الطلاب الذين إقامتهم على وشك الانتهاء: ${aboutToExpireStudents.length}</p>
-            `;
-        }
-
-        function isExpired(expiryDate) {
-            const today = new Date();
-            const date = new Date(expiryDate);
-            return today > date;
-        }
-
-        function isAboutToExpire(expiryDate) {
-            const today = new Date();
-            const date = new Date(expiryDate);
-            const diffTime = date - today;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            return diffDays <= 30 && diffDays > 0;
         }
 
         function loadStudents() {
-            const storedStudents = JSON.parse(localStorage.getItem("students"));
-            if (storedStudents) {
-                students = storedStudents;
-            }
-            renderTable();
+            const transaction = db.transaction("students", "readonly");
+            const store = transaction.objectStore("students");
+            const request = store.getAll();
+            request.onsuccess = function(e) {
+                renderTable(e.target.result);
+            };
+            request.onerror = function(e) {
+                console.error("Error loading students", e.target.error);
+            };
         }
 
         function addStudent(event) {
@@ -304,60 +224,160 @@
             const semester = document.getElementById("semester").value;
 
             const newStudent = { name, expiryDate, semester };
-            students.push(newStudent);
-            localStorage.setItem("students", JSON.stringify(students));
-            renderTable();
-            showNotifications();
+            const transaction = db.transaction("students", "readwrite");
+            const store = transaction.objectStore("students");
+            store.add(newStudent);
+
+            transaction.oncomplete = function() {
+                loadStudents();
+            };
+            transaction.onerror = function(e) {
+                console.error("Error adding student", e.target.error);
+            };
         }
 
-        function renderTable() {
+        function renderTable(students) {
             const tableBody = document.getElementById("tableBody");
             tableBody.innerHTML = "";
-            students.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
 
-            students.forEach((student, index) => {
+            let expiredCount = 0;
+            let nearExpiryCount = 0;
+
+            students.forEach(student => {
+                const today = new Date();
+                const expiry = new Date(student.expiryDate);
+                let status = "صالحة";
+                let rowClass = "";
+
+                if (expiry < today) {
+                    status = "منتهية";
+                    rowClass = "expired";
+                    expiredCount++;
+                } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 30) {
+                    status = "قريبة من الانتهاء";
+                    rowClass = "near-expiry";
+                    nearExpiryCount++;
+                }
+
+                const semesterNames = {
+                    "1": "الصف الأول",
+                    "2": "الصف الثاني",
+                    "3": "الصف الثالث",
+                    "4": "الصف الرابع",
+                    "5": "الصف الخامس",
+                    "6": "الصف السادس"
+                };
+
                 const row = document.createElement("tr");
-                const status = isExpired(student.expiryDate)
-                    ? "منتهية"
-                    : isAboutToExpire(student.expiryDate)
-                    ? "على وشك الانتهاء"
-                    : "صالحة";
-
+                row.className = rowClass;
+                row.dataset.studentId = student.id; // إضافة ID الطالب هنا
                 row.innerHTML = `
                     <td>${student.name}</td>
                     <td>${student.expiryDate}</td>
-                    <td>${student.semester === "1" ? "الفصل الدراسي الأول" : "الفصل الدراسي الثاني"}</td>
+                    <td>${semesterNames[student.semester]}</td>
                     <td>${status}</td>
-                    <td><button class="edit-btn" onclick="editStudent(${index})">تعديل</button></td>
-                    <td><button class="delete-btn" onclick="deleteStudent(${index})">حذف</button></td>
+                    <td><button onclick="editStudent(${student.id})">تعديل</button></td>
+                    <td><button onclick="deleteStudent(${student.id})">حذف</button></td>
                 `;
                 tableBody.appendChild(row);
             });
+
+            const stats = document.getElementById("stats");
+            stats.innerHTML = `
+                <span class="expired"> الطالبات بإقامات منتهية: ${expiredCount}</span><br>
+                <span class="near-expiry"> الطالبات بإقامات على وشك الانتهاء: ${nearExpiryCount}</span>
+            `;
         }
 
-        function editStudent(index) {
-            const student = students[index];
-            const newName = prompt("تعديل اسم الطالبة:", student.name);
-            const newExpiryDate = prompt("تعديل تاريخ انتهاء الإقامة:", student.expiryDate);
-            const newSemester = prompt("تعديل الفصل الدراسي:", student.semester);
+        document.addEventListener("DOMContentLoaded", function() {
+            const tableBody = document.getElementById("tableBody");
 
-            students[index] = { name: newName, expiryDate: newExpiryDate, semester: newSemester };
-            localStorage.setItem("students", JSON.stringify(students));
-            renderTable();
-            showNotifications();
+            // تفعيل السحب والإفلات على الجدول
+            new Sortable(tableBody, {
+                animation: 150,
+                onEnd: function(evt) {
+                    // عند الانتهاء من السحب والإفلات، يمكن تحديث ترتيب الطلاب في قاعدة البيانات
+                    updateStudentOrder();
+                }
+            });
+        });
+
+        function updateStudentOrder() {
+            const rows = document.querySelectorAll("#tableBody tr");
+            const newOrder = Array.from(rows).map((row, index) => {
+                const studentId = row.dataset.studentId; // يجب أن تضيف ID الطالب إلى كل صف
+                return { studentId, newPosition: index };
+            });
+
+            // هنا يمكنك إرسال الترتيب الجديد إلى قاعدة البيانات لتحديثه
+            console.log(newOrder);
         }
 
-        function deleteStudent(index) {
-            students.splice(index, 1);
-            localStorage.setItem("students", JSON.stringify(students));
-            renderTable();
-            showNotifications();
+        function checkExpiredStudents() {
+            const transaction = db.transaction("students", "readonly");
+            const store = transaction.objectStore("students");
+            const request = store.getAll();
+            request.onsuccess = function(e) {
+                const expiredStudents = e.target.result.filter(student => {
+                    const expiry = new Date(student.expiryDate);
+                    return expiry < new Date();
+                });
+
+                if (expiredStudents.length > 0) {
+                    displayExpiredStudents(expiredStudents);
+                    document.getElementById("modal").style.display = "flex";
+                }
+            };
+        }
+
+        function displayExpiredStudents(students) {
+            const list = document.getElementById("expiredStudentsList");
+            list.innerHTML = "";
+            students.forEach(student => {
+                const listItem = document.createElement("li");
+                listItem.textContent = student.name;
+                list.appendChild(listItem);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        function editStudent(id) {
+            const transaction = db.transaction("students", "readwrite");
+            const store = transaction.objectStore("students");
+            const request = store.get(id);
+            request.onsuccess = function(e) {
+                const student = e.target.result;
+                const newName = prompt("تعديل اسم الطالبة:", student.name);
+                const newExpiryDate = prompt("تعديل تاريخ انتهاء الإقامة:", student.expiryDate);
+                const newSemester = prompt("تعديل الصف:", student.semester);
+
+                store.put({ ...student, name: newName, expiryDate: newExpiryDate, semester: newSemester });
+
+                transaction.oncomplete = function() {
+                    loadStudents();
+                };
+            };
+        }
+
+        function deleteStudent(id) {
+            const transaction = db.transaction("students", "readwrite");
+            const store = transaction.objectStore("students");
+            store.delete(id);
+
+            transaction.oncomplete = function() {
+                loadStudents();
+            };
         }
 
         function logout() {
             document.getElementById("loginPage").style.display = "block";
             document.getElementById("mainPage").style.display = "none";
         }
+
+        openDB();
     </script>
 </body>
 </html>
